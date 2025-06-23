@@ -4,7 +4,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.3",
     "axios": "^1.7.9",
-    "plotly.js": "^3.0.0",
+    "plotly.js": "^3.0.1",
     "react-plotly.js": "^2.6.0"
   }
 }

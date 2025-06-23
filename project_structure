@@ -1,0 +1,40 @@
+gb_balancing_mechanism/
+├── backend/
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── wsgi.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   ├── serializers.py
+│   │   └── services/
+│   │       ├── __init__.py
+│   │       ├── data_fetcher.py
+│   │       └── data_processor.py
+│   ├── data/
+│   │   └── zone_definitions.json
+│   └── frontend/
+│       ├── package.json
+│       ├── public/
+│       │   └── index.html
+│       └── src/
+│           ├── App.js
+│           ├── index.js
+│           ├── components/
+│           │   ├── Map/
+│           │   │   ├── index.js
+│           │   │   └── styles.js
+│           │   ├── TimeSlider/
+│           │   │   ├── index.js
+│           │   │   └── styles.js
+│           │   └── BMUInfo/
+│           │       ├── index.js
+│           │       └── styles.js
+│           └── services/
+│               └── api.js
+└── README.md 

@@ -2,24 +2,20 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
-export const fetchImbalanceData = async (startDate, endDate) => {
+export const fetchDailyData = async (date) => {
+  // Format date to DD-MM-YYYY
+  const day = String(date.day).padStart(2, '0');
+  const month = String(date.month).padStart(2, '0');
+  const year = date.year;
+  const formattedDate = `${day}-${month}-${year}`;
+
   try {
-    const response = await axios.get(`${API_BASE_URL}/imbalances/`, {
-      params: { start_date: startDate, end_date: endDate }
+    const response = await axios.get(`${API_BASE_URL}/daily-data/`, {
+      params: { date: formattedDate }
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching imbalance data:', error);
+    console.error('Error fetching daily data:', error);
     throw error;
   }
 };
-
-export const fetchBMUMetadata = async (bmuId) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/bmu/${bmuId}/`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching BMU metadata:', error);
-    throw error;
-  }
-}; 

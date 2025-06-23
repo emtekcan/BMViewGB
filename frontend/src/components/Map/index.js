@@ -3,8 +3,8 @@ import styled from '@emotion/styled';
 import { GB_ZONES } from './zones';
 
 const MapContainer = styled.div`
-  width: 600px;         /* or 100%, etc. */
-  position: relative;   /* important for absolutely-positioned children */
+  width: 100%;
+  position: relative;
 `;
 
 const ZonePolygon = styled.path`
@@ -21,10 +21,10 @@ const ZonePolygon = styled.path`
 
 const ZoneInfo = styled.div`
   position: absolute;
-  bottom: 20px;
+  bottom: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  font-size: 18px;
+  transform: translate(-50%, 50%);
+  font-size: 16px;
   font-weight: bold;
   color: #333;
   padding: 8px 16px;
@@ -32,66 +32,71 @@ const ZoneInfo = styled.div`
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
+  min-width: 250px;
 `;
 
 const ZoneName = styled.div`
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
 `;
 
 const ZoneVolume = styled.div`
-  font-size: 16px;
+  font-size: 1rem;
   color: ${props => props.value > 0 ? '#2e7d32' : props.value < 0 ? '#c62828' : '#666'};
+  margin-top: 5px;
 `;
 
-const DebugInfo = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 12px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 5px;
-  border-radius: 4px;
-  max-width: 300px;
-  max-height: 200px;
-  overflow: auto;
+const VolumeBreakdown = styled.div`
+  font-size: 1rem;
+  color: #555;
+  font-weight: normal;
+  margin-top: 8px;
 `;
 
-const GBMap = ({ zoneData, onZoneClick }) => {
+const GBMap = ({ zoneData, onZoneClick, isSplitView }) => {
   const [hoveredZone, setHoveredZone] = useState(null);
-  const [debug, setDebug] = useState({});
 
   const getZoneColor = (zoneId) => {
-    if (!zoneData || zoneData[zoneId] === undefined) return '#e8e8e8'; // Default color if no data
+    if (!zoneData || !zoneData[zoneId] || typeof zoneData[zoneId].net_volume !== 'number') return '#e8e8e8';
+
+    const volumes = Object.values(zoneData).map(z => z.net_volume).filter(v => typeof v === 'number');
+    if (!volumes.length) return '#e8e8e8';
+
+    const maxAbsVolume = Math.max(...volumes.map(Math.abs));
+    const netVol = zoneData[zoneId].net_volume;
     
-    const netVol = zoneData[zoneId];
-    
-    // Return white for zero
     if (netVol === 0) return '#FFFFFF';
+    if (maxAbsVolume === 0) return '#FFFFFF';
     
-    // Color scale for positive values (green)
-    if (netVol > 0) {
-      if (netVol >= 500) return '#00FF00'; // Maximum green
-      if (netVol >= 400) return '#66FF66';
-      if (netVol >= 300) return '#99FF99';
-      if (netVol >= 200) return '#BBFFBB';
-      if (netVol >= 100) return '#DDFFDD';
-      return '#EEFFEE'; // Slight green
+    const intensity = Math.min(Math.abs(netVol) / maxAbsVolume, 1);
+
+    if (netVol > 0) { // Green scale
+      if (intensity > 0.9) return '#004d00';
+      if (intensity > 0.7) return '#008000';
+      if (intensity > 0.5) return '#00b300';
+      if (intensity > 0.3) return '#66ff66';
+      if (intensity > 0.1) return '#b3ffb3';
+      return '#e6ffe6';
+    } else { // Red scale
+      if (intensity > 0.9) return '#b30000';
+      if (intensity > 0.7) return '#ff0000';
+      if (intensity > 0.5) return '#ff4d4d';
+      if (intensity > 0.3) return '#ff8080';
+      if (intensity > 0.1) return '#ffb3b3';
+      return '#ffe6e6';
     }
-    
-    // Color scale for negative values (red)
-    if (netVol <= -500) return '#FF0000'; // Maximum red
-    if (netVol <= -400) return '#FF6666';
-    if (netVol <= -300) return '#FF9999';
-    if (netVol <= -200) return '#FFBBBB';
-    if (netVol <= -100) return '#FFDDDD';
-    return '#FFEEEE'; // Slight red
   };
 
   const handleMouseEnter = (zone) => {
+    const data = zoneData[zone.id];
     setHoveredZone({
       id: zone.id,
       name: zone.name,
-      netVol: zoneData[zone.id] !== undefined ? zoneData[zone.id] : 'No data'
+      netVol: data ? data.net_volume : 'No data',
+      energyVol: data ? data.energy_volume : 'N/A',
+      systemVol: data ? data.system_volume : 'N/A'
     });
   };
 
@@ -99,7 +104,11 @@ const GBMap = ({ zoneData, onZoneClick }) => {
     <MapContainer>
       <svg
         viewBox="0 0 500 800"
-        style={{ width: '100%', maxWidth: '600px' }}
+        style={{ 
+          width: '100%', 
+          height: 'auto', 
+          maxWidth: isSplitView ? '600px' : '800px' 
+        }}
       >
         {GB_ZONES.map((zone) =>
           zone.paths.map((path, index) => (
@@ -124,6 +133,10 @@ const GBMap = ({ zoneData, onZoneClick }) => {
               `${hoveredZone.netVol.toFixed(2)} MWh` : 
               hoveredZone.netVol}
           </ZoneVolume>
+          <VolumeBreakdown>
+            <div>Energy Actions: {typeof hoveredZone.energyVol === 'number' ? `${hoveredZone.energyVol.toFixed(2)} MWh` : hoveredZone.energyVol}</div>
+            <div>System Actions: {typeof hoveredZone.systemVol === 'number' ? `${hoveredZone.systemVol.toFixed(2)} MWh` : hoveredZone.systemVol}</div>
+          </VolumeBreakdown>
         </ZoneInfo>
       )}
     </MapContainer>
