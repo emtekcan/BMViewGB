@@ -31,3 +31,38 @@ export const fetchAvailableVariables = async () => {
     throw error;
   }
 };
+
+export const fetchTimeSeries = async ({ startDate, endDate, variables }) => {
+  const { data } = await axios.get(`${API_BASE_URL}/time-series/`, {
+    params: {
+      start_date: startDate,
+      end_date: endDate,
+      variables: variables.join(","),
+    },
+  });
+  return data;
+};
+
+export const downloadAsCsv = (rows, filename = "timeseries.csv") => {
+  if (!rows || !rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.join(","),
+    ...rows.map((r) =>
+      headers
+        .map((h) => {
+          const v = r[h] ?? "";
+          const s = String(v).replace(/"/g, '""');
+          return `"${s}"`;
+        })
+        .join(",")
+    ),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
