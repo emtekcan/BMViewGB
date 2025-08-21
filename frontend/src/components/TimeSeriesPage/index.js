@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Plot from 'react-plotly.js';
+import { fetchAvailableVariables } from "../../services/api";
 
 const PageContainer = styled.div`
   padding: 30px;
@@ -73,16 +74,14 @@ const TimeSeriesPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch available variables on component mount
     const fetchVars = async () => {
       try {
-        const response = await fetch('/api/available-variables/');
-        const data = await response.json();
+        const data = await fetchAvailableVariables();
         setAvailableVars(data);
-        setXVariable(data.time[0] || '');
-        setYVariable(data.numeric[0] || '');
+        setXVariable(data.time[0] || "");
+        setYVariable(data.numeric[0] || "");
       } catch (e) {
-        setError('Could not fetch variable list.');
+        setError("Could not fetch variable list.");
       }
     };
     fetchVars();

@@ -21,3 +21,13 @@ export const fetchDailyData = async (date) => {
     throw error;
   }
 };
+
+export const fetchAvailableVariables = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/available-variables/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching available variables:", error);
+    throw error;
+  }
+};
