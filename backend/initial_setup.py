@@ -102,6 +102,9 @@ def main():
     processor = DataProcessor()
     processor.create_all_core_data()
     print("Initial data processing finished.")
+    print("Disk contents after setup:")
+    for f in os.listdir(_data_dir()):
+        print(" -", f)
 
 if __name__ == "__main__":
     main()
