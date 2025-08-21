@@ -93,6 +93,16 @@ def _download_if_needed():
             # Keep the original download for debugging
             continue
 
+def log_dir(path: Path, indent: int = 0):
+    prefix = " " * indent
+    for item in sorted(path.iterdir()):
+        if item.is_dir():
+            print(f"{prefix}[DIR] {item.name}/")
+            log_dir(item, indent + 2)
+        else:
+            size_mb = item.stat().st_size / 1e6
+            print(f"{prefix}{item.name} ({size_mb:.1f} MB)")
+
 def main():
     print("Starting initial data processing...")
     # Ensure data exists
@@ -103,8 +113,8 @@ def main():
     processor.create_all_core_data()
     print("Initial data processing finished.")
     print("Disk contents after setup:")
-    for f in os.listdir(_data_dir()):
-        print(" -", f)
+    data_dir = Path(__file__).resolve().parent / "data"
+    log_dir(data_dir)
 
 if __name__ == "__main__":
     main()
