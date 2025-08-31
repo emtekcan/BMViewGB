@@ -10,11 +10,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from api.services.data_processor import DataProcessor
 
 DRIVE_LINKS = [
-    "https://drive.google.com/file/d/1yxwAweOpvetnbb7dc_9bvyC71puJYcy8/view?usp=drive_link",
-    "https://drive.google.com/file/d/1gty0Ic-RepFkstl45A_3wdBAYw5aXzfA/view?usp=drive_link",
-    "https://drive.google.com/file/d/1vD8XHFF74fgPoRAfOJtWom6vQIrXNJoM/view?usp=drive_link",
-    "https://drive.google.com/file/d/1kzi2nbdC_AGKrjOod39jU4ZUbe7ID1uB/view?usp=drive_link",
-    "https://drive.google.com/file/d/1CJxjCUgkfu2aQoWnfSlZsJlPdW1z4h2z/view?usp=drive_link",
+    "https://drive.google.com/file/d/1gDfLv0QkHFj59LOMwN3Fhy_of77QqkNf/view?usp=drive_link", #2023
+    "https://drive.google.com/file/d/1n6cOyOlOgC8B2ICJwkujIEw9pvKWm0Xx/view?usp=drive_link", #2024
+    "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link"  #2025
     
 ]
 
