@@ -79,6 +79,8 @@ def _download_with_retries(file_id: str, out_path: str, max_tries: int = 4) -> b
     return False
 
 DRIVE_LINKS = [
+    "https://drive.google.com/file/d/1hYsU8348FDtHsjb68nROXQgePlFXjZHA/view?usp=drive_link", # 2021
+    "https://drive.google.com/file/d/1jXuHCJDgwiRg0LsOE_LJcDWG-_ZfWC-S/view?usp=drive_link", # 2022
     "https://drive.google.com/file/d/1gDfLv0QkHFj59LOMwN3Fhy_of77QqkNf/view?usp=drive_link", # 2023
     "https://drive.google.com/file/d/1n6cOyOlOgC8B2ICJwkujIEw9pvKWm0Xx/view?usp=drive_link", # 2024
     "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link"  # 2025
