@@ -1,19 +1,45 @@
 import os
 import sys
+import time
 from pathlib import Path
 import glob
 import re
+import gdown
 
 # Ensure 'backend' is on path (file is inside backend/)
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from api.services.data_processor import DataProcessor
 
+def _download_with_retries(file_id: str, out_path: str, max_tries: int = 4):
+    last_err = None
+    for attempt in range(1, max_tries + 1):
+        try:
+            # Try by id (most reliable)
+            gdown.download(id=file_id, output=out_path, quiet=False, use_cookies=False)
+            return
+        except Exception as e:
+            last_err = e
+            # Fallback: let gdown parse a view URL
+            try:
+                url = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+                gdown.download(url=url, output=out_path, quiet=False, use_cookies=False, fuzzy=True)
+                return
+            except Exception as e2:
+                last_err = e2
+                # If quota / many accesses, backoff and try again
+                msg = str(e2).lower()
+                if any(k in msg for k in ["many accesses", "quota", "cannot retrieve the public link"]):
+                    time.sleep(15 * attempt)
+                    continue
+                # Otherwise, no point retrying
+                break
+    raise RuntimeError(f"Failed to download {file_id}: {last_err}")
+
 DRIVE_LINKS = [
     "https://drive.google.com/file/d/1gDfLv0QkHFj59LOMwN3Fhy_of77QqkNf/view?usp=drive_link", #2023
     "https://drive.google.com/file/d/1n6cOyOlOgC8B2ICJwkujIEw9pvKWm0Xx/view?usp=drive_link", #2024
-    "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link"  #2025
-    
+    "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link"  #2025  
 ]
 
 def _extract_file_id(drive_url: str) -> str:
@@ -52,7 +78,7 @@ def _download_if_needed():
     for url in DRIVE_LINKS:
         file_id = _extract_file_id(url)
         temp_path = data_dir / f"download_{file_id}.csv"
-        gdown.download(f"https://drive.google.com/uc?id={file_id}", str(temp_path), quiet=False)
+        _download_with_retries(file_id, str(temp_path))
 
         if not temp_path.exists() or temp_path.stat().st_size == 0:
             raise RuntimeError(f"Download failed or produced empty file for id={file_id}")
