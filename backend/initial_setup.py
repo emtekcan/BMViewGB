@@ -78,13 +78,13 @@ def _download_with_retries(file_id: str, out_path: str, max_tries: int = 4) -> b
     print(f"[initial_setup] WARNING: failed to download {file_id}: {last_err}")
     return False
 
-DRIVE_LINKS = [
-    "https://drive.google.com/file/d/1hYsU8348FDtHsjb68nROXQgePlFXjZHA/view?usp=drive_link", # 2021
-    "https://drive.google.com/file/d/1jXuHCJDgwiRg0LsOE_LJcDWG-_ZfWC-S/view?usp=drive_link", # 2022
-    "https://drive.google.com/file/d/1gDfLv0QkHFj59LOMwN3Fhy_of77QqkNf/view?usp=drive_link", # 2023
-    "https://drive.google.com/file/d/1n6cOyOlOgC8B2ICJwkujIEw9pvKWm0Xx/view?usp=drive_link", # 2024
-    "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link"  # 2025
-]
+YEAR_TO_DRIVE = {
+    2021: "https://drive.google.com/file/d/1hYsU8348FDtHsjb68nROXQgePlFXjZHA/view?usp=drive_link",
+    2022: "https://drive.google.com/file/d/1jXuHCJDgwiRg0LsOE_LJcDWG-_ZfWC-S/view?usp=drive_link",
+    2023: "https://drive.google.com/file/d/1gDfLv0QkHFj59LOMwN3Fhy_of77QqkNf/view?usp=drive_link",
+    2024: "https://drive.google.com/file/d/1n6cOyOlOgC8B2ICJwkujIEw9pvKWm0Xx/view?usp=drive_link",
+    2025: "https://drive.google.com/file/d/1OTPT4TUqiwupGfYzmIdlvjfW7ClFJHXB/view?usp=drive_link",
+}
 
 def _extract_file_id(drive_url: str) -> str:
     m = re.search(r"/file/d/([^/]+)/", drive_url)
@@ -101,49 +101,65 @@ def _data_dir() -> Path:
 def _has_processed_files(data_dir: Path) -> bool:
     return any(Path(p).is_file() for p in glob.glob(str(data_dir / "*boadf_processed.csv")))
 
+def _existing_processed_years(data_dir: Path) -> set:
+    years = set()
+    for p in data_dir.glob("*boadf_processed.csv"):
+        m = re.search(r"(20\d{2})boadf_processed\\.csv$", p.name)
+        if m:
+            try:
+                years.add(int(m.group(1)))
+            except Exception:
+                pass
+    return years
+
 def _download_if_needed():
     """
-    Downloads all Drive files into data_dir if no processed files exist.
-    Renames each to {year}boadf_processed.csv by inspecting the CSV content.
+    Download and save missing yearly processed files only.
+    - Determine which years are missing based on files named {year}boadf_processed.csv
+    - For each missing year, download from the mapped Drive link and save
     """
     import pandas as pd
 
     data_dir = _data_dir()
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    if _has_processed_files(data_dir):
-        print("[initial_setup] Found processed files already. Skipping downloads.")
+    existing_years = _existing_processed_years(data_dir)
+    desired_years = set(YEAR_TO_DRIVE.keys())
+    missing_years = sorted(list(desired_years - existing_years))
+
+    if not missing_years:
+        print("[initial_setup] All processed files for configured years already present. Skipping downloads.")
         return
 
-    print("[initial_setup] No processed files found. Downloading from Google Drive...")
+    print(f"[initial_setup] Missing processed years detected: {missing_years}. Downloading...")
 
-    for url in DRIVE_LINKS:
+    for year in missing_years:
+        url = YEAR_TO_DRIVE[year]
         file_id = _extract_file_id(url)
-        temp_path = data_dir / f"download_{file_id}.csv"
+        temp_path = data_dir / f"download_{year}_{file_id}.csv"
 
         if not _download_with_retries(file_id, str(temp_path)):
-            # Mark failure but continue; don't kill deploy
-            (data_dir / f"FAILED_{file_id}.txt").write_text("Download failed during deploy\n")
+            (data_dir / f"FAILED_{year}_{file_id}.txt").write_text("Download failed during deploy\n")
             continue
 
         if not temp_path.exists() or temp_path.stat().st_size == 0:
-            print(f"[initial_setup] WARNING: Empty file for id={file_id}")
-            # keep the failed file for debugging, continue to next
+            print(f"[initial_setup] WARNING: Empty file for year={year} id={file_id}")
             continue
 
-        # Infer year from settlement_date
         try:
             sample = pd.read_csv(temp_path, nrows=1000)
-            year = None
+            inferred_year = None
             if "settlement_date" in sample.columns:
                 sd = pd.to_datetime(sample["settlement_date"], errors="coerce").dropna()
                 if not sd.empty:
-                    year = int(sd.iloc[0].year)
-            if year is None:
+                    inferred_year = int(sd.iloc[0].year)
+            if inferred_year is None:
                 m = re.search(r"(20\d{2})", temp_path.name)
-                if m: year = int(m.group(1))
-            if year is None:
-                raise ValueError("Could not infer year from CSV; ensure 'settlement_date' exists.")
+                if m:
+                    inferred_year = int(m.group(1))
+
+            if inferred_year is not None and inferred_year != year:
+                print(f"[initial_setup] WARNING: Inferred year {inferred_year} differs from expected {year} for id={file_id}")
 
             target = data_dir / f"{year}boadf_processed.csv"
             if target.exists() and target.stat().st_size > 0:
@@ -153,8 +169,7 @@ def _download_if_needed():
                 temp_path.rename(target)
                 print(f"[initial_setup] Saved processed file: {target}")
         except Exception as e:
-            print(f"[initial_setup] Error inferring year for {temp_path.name}: {e}")
-            # keep temp for inspection
+            print(f"[initial_setup] Error processing downloaded CSV for year {year}: {e}")
             continue
 
 def log_dir(path: Path, indent: int = 0):
