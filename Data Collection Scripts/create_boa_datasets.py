@@ -4,6 +4,15 @@ import requests
 import pandas as pd
 from pandas import json_normalize
 
+"""
+This script is used to create the core BOA dataset from the Elexon BSC Insights Solution for BMViewGB
+Run this script before running any other scripts in the Data Collection Scripts folder.
+Ensure that the file 'TLFA-I001_NMS_2023-2024.csv' is in the same directory as this script.
+This file is obtained from the Elexon BSC Data Portal Operational Data at https://www.elexonportal.co.uk/category/view/179
+but cannot be redistributed in this repository due to Elexon's terms of use however the data is publicly available for free
+directly from Elexon themselves, as explained in the paper and the readme, this is the 23/24 Transmission Loss Factor Mapping Statement data.
+"""
+
 # ---------------------------------------------------------------------
 # Pull the bmunits data from the Elexon BSC Insights Solution API
 # Forms the core of our BMU dataset
