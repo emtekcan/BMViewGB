@@ -9,6 +9,7 @@ import pandas as pd
 """
 This script is used to drop redundant columns.
 'col_bmu' is a duplicate of bm_unit with less data, 'pair_volumes_positive6' and 'pair_volumes_negative6' have all null values for every row in every file
+This script should be run at some point after create_boa_datasets.py has created the processed CSV files in the same directory.
 """
 
 # ---------------------------------------------------------------------------
