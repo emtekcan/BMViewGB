@@ -16,8 +16,8 @@ Before you begin, ensure you have the following installed on your system:
 
 The application requires specific data files to function correctly.
 
-*   Download the CSV data files from the following Google Drive folder:
-    [BMViewGB Data](https://drive.google.com/drive/folders/1YHW5hhtLD4ronX0ICUSpcL-1GaX3bDXd?usp=sharing)
+*   Download the five CSV data files ending in `_processed.csv` from the following Google Drive folder:
+    [BMViewGB Data](https://drive.google.com/drive/u/2/folders/1a2KNcrTmrgl08Gke7hFIlAjSpoDB3FJW)
 *   Place all the downloaded `.csv` files into the `backend/data/` directory.
 
 #### 2. Backend Setup
